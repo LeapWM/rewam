@@ -1,0 +1,262 @@
+model_name: 'ltx_train'
+is_i2v: True
+report_to: none
+tracker_name: ltx_trainer
+view_mode: "front"
+logging_dir: logs
+output_dir: ${NAVSIM_EXP_ROOT}/videodrive_level_k_runs
+# Set these environment variables before launching training:
+#   DRIVELAW_VIDEO_MODEL_ROOT
+#   DRIVELAW_DIFFUSION_WEIGHTS
+pretrained_model_name_or_path: ${DRIVELAW_VIDEO_MODEL_ROOT}
+###
+train_data_class_path: data/agibotworld_dataset.py
+train_data_class: AgiBotWorld
+val_data_class_path: data/agibotworld_dataset.py
+val_data_class: AgiBotWorld
+
+###
+tokenizer_class_path: transformers
+tokenizer_class: T5Tokenizer
+textenc_class_path: transformers
+textenc_class: T5EncoderModel
+vae_class_path: diffusers
+vae_class: AutoencoderKLLTXVideo
+diffusion_model_class_path: ${NAVSIM_DEVKIT_ROOT}/navsim/agents/videodrive/video_models/ltx_models/transformer_ltx.py
+diffusion_model_class: LTXVideoTransformer3DModel
+diffusion_scheduler_class_path: diffusers
+diffusion_scheduler_class: FlowMatchEulerDiscreteScheduler
+
+pipeline_class_path: ${NAVSIM_DEVKIT_ROOT}/navsim/agents/videodrive/video_models/pipeline/pipeline_ltx_condition.py
+pipeline_class: LTXConditionPipeline
+
+#
+return_action: true
+return_video: false
+train_mode: 'action_full'
+action_loss_scale: 1.0
+
+# total training step is decided by the minimum of the below two
+train_steps: 200000
+train_epochs: 100
+steps_to_save: 5000
+steps_to_log: 20
+steps_to_val: 10000
+
+mixed_precision: bf16
+allow_tf32: False
+
+# timeout, seconds
+nccl_timeout: 600
+seed: 42
+
+# vae
+enable_slicing: True
+enable_tiling: True
+
+add_state: False
+
+caption_dropout_p: 0.06
+
+# dataloader
+batch_size: 1
+dataloader_num_workers: 8
+pin_memory: True
+
+gradient_checkpointing: True
+noise_to_first_frame: 0.0
+
+# Optimizer Config
+optimizer: adamw
+lr: 3e-5
+beta1: 0.9
+beta2: 0.95
+beta3: 0.999
+epsilon: 1e-8
+weight_decay: 1e-5
+optimizer_8bit: False
+optimizer_torchao: False
+scale_lr: False
+
+max_grad_norm: 1.0
+gradient_accumulation_steps: 1
+
+# ===== EMA =====
+use_ema: true
+ema_decay: 0.999
+ema_min_decay: 0.0
+use_ema_warmup: true
+ema_inv_gamma: 0.5
+ema_power: 0.75
+ema_update_after_step: 1000
+
+
+# lr_scheduler Config
+lr_scheduler: constant_with_warmup
+lr_warmup_steps: 1000
+lr_num_cycles: 1
+lr_power: 1.0
+
+enable_val: true
+
+# Timestep Config
+flow_weighting_scheme: none
+flow_logit_mean: 0.0
+flow_logit_std: 1.0
+flow_mode_scale: 1.29
+
+pixel_wise_timestep: True
+
+diffusion_model:
+  model_path: ${DRIVELAW_DIFFUSION_WEIGHTS}
+  config:
+    activation_fn: gelu-approximate
+    attention_bias: true
+    attention_head_dim: 64
+    attention_out_bias: true
+    caption_channels: 4096
+    cross_attention_dim: 2048
+    in_channels: 128
+    norm_elementwise_affine: false
+    norm_eps: 1.0e-6
+    num_attention_heads: 32
+    num_layers: 28
+    out_channels: 128
+    patch_size: 1
+    patch_size_t: 1
+    qk_norm: rms_norm_across_heads
+    action_expert: true
+    action_in_channels: 3
+    action_num_attention_heads: 16
+    action_attention_head_dim: 32
+    action_strategy_conditioning: false
+    other_agent_expert: false
+    other_agent_num_layers: 28
+    other_agent_horizon_steps: 8
+    other_agent_position_scale: 80.0
+    other_agent_velocity_scale: 30.0
+    other_agent_size_scale: 10.0
+    strategy_max_reasoning_level: 3
+    strategy_interval_length: 0.5
+
+
+use_color_jitter: true
+num_inference_step: 5
+noisy_video: true
+
+# false for quick debug, for training set True
+load_weights: true
+
+# Optional Level-k reasoning. Disabled by default to preserve the original path.
+level_k:
+  enabled: false
+  reasoning_level: 0
+  max_reasoning_level: 3
+  training_reasoning_level: 1
+  max_agents: 10
+  agent_range: 80.0
+  agent_selection: nearest
+  horizon_steps: 8
+  interval_length: 0.5
+  level_zero_mode: map_lane_following
+  level_zero_fallback: constant_heading
+  level_zero_lane_search_radius: 8.0
+  level_zero_max_lateral_error: 4.0
+  level_zero_max_heading_error: 1.0471975511965976
+  level_zero_route_search_depth: 30
+  oracle_agent_states: true
+  strategy_velocity_scale: 30.0
+  strategy_size_scale: 10.0
+  other_trajectory_position_scale: 80.0
+  ego_loss_weight: 1.0
+  other_loss_weight: 1.0
+  collision_loss_weight: 0.1
+  collision_safety_margin: 0.3
+  collision_temperature: 0.2
+  collision_radius_scale: 0.7
+  collision_loss_start_step: 1000
+  collision_loss_ramp_steps: 4000
+  drivable_loss_weight: 0.0
+  drivable_data_path: null
+  drivable_safety_margin: 0.2
+  drivable_temperature: 0.2
+  drivable_swept_substeps: 1
+  drivable_worst_case_topk: 0
+  drivable_loss_start_step: 1000
+  drivable_loss_ramp_steps: 4000
+  drivable_min_coverage: 1.0
+  progress_loss_weight: 0.1
+  progress_tolerance_ratio: 0.05
+  progress_min_gt_distance: 0.5
+  progress_loss_start_step: 1000
+  progress_loss_ramp_steps: 4000
+  ttc_swept_box_loss_weight: 0.0
+  ttc_swept_substeps: 4
+  ttc_reaction_time: 0.5
+  ttc_safety_margin: 0.2
+  ttc_temperature: 0.2
+  ttc_loss_start_step: 1000
+  ttc_loss_ramp_steps: 4000
+  progress_safe_loss_weight: 0.0
+  progress_route_data_path: null
+  progress_route_min_coverage: 1.0
+  progress_projection_temperature: 0.5
+  progress_safe_margin: 0.2
+  progress_safe_min_gt_progress: 0.5
+  progress_drivable_gate_margin: 0.2
+  progress_drivable_gate_temperature: 0.2
+  progress_ttc_gate_margin: 0.2
+  progress_ttc_gate_temperature: 0.2
+  progress_safe_reference_gate: false
+  progress_safe_loss_start_step: 1000
+  progress_safe_loss_ramp_steps: 4000
+  retain_loss_weight: 0.0
+  retain_data_path: null
+  retain_min_coverage: 1.0
+  retain_min_safety_score: 0.8
+  retain_heading_weight: 0.1
+  retain_loss_start_step: 1000
+  retain_loss_ramp_steps: 4000
+  safe_trajectory_loss_weight: 0.1
+  safe_trajectory_heading_weight: 0.1
+  safe_trajectory_loss_start_step: 1000
+  safe_trajectory_loss_ramp_steps: 4000
+  # Offline hard-negative supervision is opt-in.  Build and validate a pool
+  # before enabling it; evaluation never consumes this data.
+  hard_negative_enabled: false
+  hard_negative_data_path: null
+  hard_negative_split_path: null
+  hard_negative_sample_ratio: 0.0
+  hard_negative_loss_weight: 0.02
+  hard_negative_margin_ratio: 0.5
+  hard_negative_max_margin: 2.0
+  hard_negative_loss_start_step: 2000
+  hard_negative_loss_ramp_steps: 8000
+  hard_negative_min_coverage: 0.06
+  ego_vehicle_length: 5.176
+  ego_vehicle_width: 2.297
+  ego_rear_axle_to_center: 1.461
+  train_ego_action_expert_from_scratch: true
+  train_other_agent_expert_from_scratch: true
+  initialize_level_k_modules_from_scratch: true
+  freeze_video_transformer: true
+  freeze_vae: true
+  freeze_text_encoder: true
+  ego_action_lr: 1.0e-5
+  other_agent_lr: 3.0e-5
+  strategy_lr: 3.0e-5
+  validation_report_path: null
+  require_visualization_acceptance: true
+
+# deepspeed config
+use_deepspeed: true
+deepspeed:
+  zero_optimization:
+    stage: 1
+    # offload_optimizer:
+    #   device: cpu
+  fp16:
+    enabled: false
+  bf16:
+    enabled: true
+  gradient_clipping: 1.0
