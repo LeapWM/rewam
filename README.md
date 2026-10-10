@@ -71,6 +71,7 @@ The checkpoint is not stored in Git. Prepare:
 
 Set the runtime paths:
 
+```bash
 export REWAM_ROOT=/path/to/ReWAM__Reciprocal_World_Action_Model
 export ACT_ROOT="$REWAM_ROOT/ReWAM-main/Action-DiT"
 export OPENSCENE_DATA_ROOT=/path/to/OpenScene/dataset
@@ -87,6 +88,8 @@ export DRIVELAW_ORACLE_AGENT_STATES=true
 export DRIVELAW_REASONING_LEVEL=3
 export DRIVELAW_MAX_REASONING_LEVEL=3
 export PYTHONPATH="$ACT_ROOT"
+
+```
 
 The checkpoint used to verify this release has SHA-256:
 
