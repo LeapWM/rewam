@@ -20,14 +20,15 @@ The released inference path includes:
 
 The reference checkpoint uses:
 
-| Setting | Value |
-| --- | --- |
-| Reasoning depth | Level-1 |
-| Other Action DiT | 28 layers |
-| Prediction horizon | 8 steps |
-| Sampling interval | 0.5 s |
-| Agent state source | current-frame oracle states |
-| Reported NAVTEST PDMS | 90.6426 |
+
+| Setting               | Value                       |
+| --------------------- | --------------------------- |
+| Reasoning depth       | Level-3                     |
+| Other Action DiT      | 28 layers                   |
+| Prediction horizon    | 8 steps                     |
+| Sampling interval     | 0.5 s                       |
+| Agent state source    | current-frame oracle states |
+| Reported NAVTEST PDMS | 90.6                        |
 
 A checkpoint trained with another reasoning depth or Other Action DiT depth is not architecture-compatible with this configuration.
 
@@ -70,7 +71,6 @@ The checkpoint is not stored in Git. Prepare:
 
 Set the runtime paths:
 
-```bash
 export REWAM_ROOT=/path/to/ReWAM__Reciprocal_World_Action_Model
 export ACT_ROOT="$REWAM_ROOT/ReWAM-main/Action-DiT"
 export OPENSCENE_DATA_ROOT=/path/to/OpenScene/dataset
@@ -84,10 +84,9 @@ export DRIVELAW_MODEL_CONFIG="$ACT_ROOT/navsim/agents/videodrive/configs/ltx_mod
 
 export DRIVELAW_LEVEL_K_ENABLED=true
 export DRIVELAW_ORACLE_AGENT_STATES=true
-export DRIVELAW_REASONING_LEVEL=1
+export DRIVELAW_REASONING_LEVEL=3
 export DRIVELAW_MAX_REASONING_LEVEL=3
 export PYTHONPATH="$ACT_ROOT"
-```
 
 The checkpoint used to verify this release has SHA-256:
 
@@ -118,7 +117,6 @@ For a one-token smoke test, append:
 ```
 
 Each rank writes a CSV shard containing validity, inference time, NC, DAC, EP, TTC, Comfort, DDC, and PDMS. Merge shards with the retained evaluation utilities before reporting the full NAVTEST score.
-
 
 ## Verification
 
